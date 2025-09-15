@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard Manajemen Stok — Full</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* ========== Reset & Base ========== */
+    :root{
+      --bg:#0f1724;
+      --panel:#0b1220;
+      --card:#0f1724;
+      --muted:#94a3b8;
+      --accent:#60a5fa;
+      --accent-2:#7c3aed;
+      --glass: rgba(255,255,255,0.03);
+      --danger:#ef4444;
+      --success:#10b981;
+      --soft:#111827;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#e6eef8;background:linear-gradient(180deg,#021026 0%, #071028 100%);}
+    a{color:inherit}
+    .container{max-width:1200px;margin:18px auto;padding:18px;display:grid;grid-template-columns:240px 1fr;gap:18px}
+    /* ========== Sidebar ========== */
+    .sidebar{background:var(--panel);border-radius:12px;padding:18px;box-shadow:0 6px 30px rgba(2,6,23,0.6)}
+    .brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .logo{width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:800;color:#041024}
+    .appname{font-weight:700;font-size:16px}
+    .nav{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+    .nav button{background:transparent;border:none;color:var(--muted);text-align:left;padding:10px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+    .nav button.active{background:linear-gradient(90deg,rgba(96,165,250,0.08),rgba(124,58,237,0.06));color:var(--accent);box-shadow:inset 0 1px 0 rgba(255,255,255,0.02)}
+    .sidebar .section{margin-top:18px;font-size:13px;color:var(--muted)}
+    .userbox{margin-top:12px;padding:10px;background:var(--glass);border-radius:8px;display:flex;gap:10px;align-items:center}
+    .badge{background:rgba(255,255,255,0.04);padding:6px 8px;border-radius:999px;font-weight:700;font-size:13px}
+    .small{font-size:13px;color:var(--muted)}
+    /* ========== Main content ========== */
+    .main{min-height:80vh}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
+    .search{display:flex;gap:8px;align-items:center}
+    .search input{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:12px;margin-bottom:12px;box-shadow:0 6px 18px rgba(2,6,23,0.35)}
+    .grid-2{display:grid;grid-template-columns:1fr 360px;gap:12px}
+    .row{display:flex;gap:12px}
+    .muted{color:var(--muted);font-size:13px}
+    h1,h2{margin:0;color:#e6eef8}
+    h2{font-size:18px;margin-bottom:6px}
+    label{display:block;font-weight:700;margin-top:8px;font-size:13px}
+    input[type=text],input[type=number],input[type=date],select,textarea{
+      width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit
+    }
+    button.btn{background:linear-gradient(90deg,var(--accent),var(--accent-2));border:none;color:#041024;padding:10px 12px;border-radius:8px;font-weight:700;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--accent);padding:8px 10px;border-radius:8px;cursor:pointer}
+    button.warn{background:var(--danger);color:white}
+    .small{font-size:13px;padding:8px 10px;border-radius:8px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{text-align:left;padding:10px;border-bottom:1px dashed rgba(255,255,255,0.02);font-size:14px}
+    th{color:var(--muted);font-weight:700}
+    .center{text-align:center}
+    .stat{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02)}
+    .stat .num{font-size:20px;font-weight:800;color:var(--accent)}
+    .stat .label{font-size:13px;color:var(--muted)}
+    /* blinking alert */
+    .blink { color: var(--danger); font-weight:900; animation: blink-animation 1s steps(2, start) infinite; }
+    @keyframes blink-animation { to { visibility: hidden; } }
+    /* responsive */
+    @media (max-width:1000px){ .container{grid-template-columns:1fr} .grid-2{grid-template-columns:1fr} .sidebar{display:flex;flex-direction:row;gap:12px;overflow:auto} .nav{flex-direction:row} .nav button{white-space:nowrap} }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">KNO</div>
+      <div>
+        <div class="appname">COLUMBIA</div>
+        <div class="muted" style="font-size:13px">AQIL KURNIAWAN PROJECT</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="active" data-tab="home">🏠 Home</button>
+      <button data-tab="masuk">📥 Barang Masuk</button>
+      <button data-tab="keluar">📤 Barang Keluar</button>
+      <button data-tab="pengguna">👥 Pengguna & Role</button>
+    </nav>
+
+    <div class="section">
+      <div class="userbox" id="userbox">
+        <div>
+          <div class="badge" id="userBadge">Guest</div>
+          <div class="muted" id="userRole">Belum login</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="btn-open-login" class="ghost small">Login</button>
+        <button id="btn-logout" class="small" style="display:none">Logout</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="muted" style="font-size:13px">Kredensial uji:</div>
+        <ul style="margin:8px 0 0 18px;padding:0;color:var(--muted);font-size:13px">
+          <li><strong>admin / admin123</strong> — Admin (penuh)</li>
+          <li><strong>viewer / view123</strong> — Viewer (hanya lihat)</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:12px" class="muted">Aksi cepat:</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button id="btn-export-csv" class="ghost small" title="Ekspor histori (CSV)">CSV</button>
+        <button id="btn-export-xls" class="ghost small" title="Ekspor histori (XLS)">XLS</button>
+        <button id="btn-undo" class="ghost small" title="Undo transaksi terakhir">Undo</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <button id="btn-reset" class="ghost small">Reset Storage</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>PABLO ESCOBAR STORAGE</h1>
+        <div class="muted">CARTEL-COLUMBIA</div>
+      </div>
+
+      <div class="search">
+        <input id="globalSearch" placeholder="Cari barang atau histori..." />
+        <button id="btn-download-html" class="ghost small">Download .html</button>
+      </div>
+    </div>
+
+    <!-- TAB: HOME -->
+    <section class="panel" id="tab-home">
+      <div class="grid-2">
+        <div>
+          <h2>Ringkasan</h2>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px">
+            <div class="stat">
+              <div>
+                <div class="label">Item Berbeda</div>
+                <div class="num" id="stat-items">0</div>
+              </div>
+              <div class="muted">🗂️</div>
+            </div>
+            <div class="stat">
+              <div>
+                <div class="label">Total Unit</div>
+                <div class="num" id="stat-units">0</div>
+              </div>
+              <div class="muted">📦</div>
+            </div>
+            <div class="stat">
+              <div>
+                <div class="label">Transaksi (Total)</div>
+                <div class="num" id="stat-trans">0</div>
+              </div>
+              <div class="muted">🔁</div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <h2>Grafik Stok (Top items)</h2>
+            <div style="height:260px">
+              <canvas id="homeChart"></canvas>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <h2>Notifikasi Stok Rendah</h2>
+            <div id="alertsArea" style="min-height:48px"></div>
+          </div>
+        </div>
+
+        <aside>
+          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+            <h2>Pengguna & Role</h2>
+            <div class="muted" style="font-size:13px">Manajemen lokal</div>
+          </div>
+
+          <div style="margin-top:8px">
+            <table>
+              <thead><tr><th>Username</th><th>Role</th></tr></thead>
+              <tbody id="usersTable">
+                <!-- generated -->
+              </tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:12px">
+            <h2>Pengaturan</h2>
+            <label>Batas Stok Rendah</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="number" id="batasInput" min="0" style="width:120px" />
+              <button id="btn-set-batas" class="ghost small">Set</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- TAB: BARANG MASUK -->
+    <section class="panel" id="tab-masuk" style="display:none">
+      <div class="row">
+        <div style="flex:1">
+          <h2>Barang Masuk</h2>
+          <label>Nama Barang</label>
+          <input id="inName" placeholder="Contoh: Kabel USB" />
+          <label>Jumlah</label>
+          <input id="inQty" type="number" min="1" />
+          <label>Tanggal</label>
+          <input id="inDate" type="date" />
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="btn-add-in" class="btn">Tambah Masuk</button>
+            <button id="btn-sample" class="ghost small">Isi Sample</button>
+          </div>
+
+          <div style="margin-top:12px">
+            <h2>Ringkasan Masuk (7 hari)</h2>
+            <div style="height:200px"><canvas id="masukChart"></canvas></div>
+          </div>
+        </div>
+
+        <aside style="width:360px">
+          <h2>Top Barang (stok)</h2>
+          <div style="max-height:360px;overflow:auto;margin-top:8px">
+            <table>
+              <thead><tr><th>Nama</th><th class="center">Stok</th></tr></thead>
+              <tbody id="stokSidebar"></tbody>
+            </table>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- TAB: BARANG KELUAR -->
+    <section class="panel" id="tab-keluar" style="display:none">
+      <div class="row">
+        <div style="flex:1">
+          <h2>Barang Keluar</h2>
+          <label>Nama Barang</label>
+          <input id="outName" placeholder="Contoh: Kabel USB" />
+          <label>Jumlah</label>
+          <input id="outQty" type="number" min="1" />
+          <label>Tanggal</label>
+          <input id="outDate" type="date" />
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="btn-add-out" class="btn">Tambah Keluar</button>
+            <button id="btn-undo-local" class="ghost small">Undo (sama)</button>
+          </div>
+
+          <div style="margin-top:12px">
+            <h2>Histori Transaksi</h2>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+              <label style="margin:0">Dari</label><input id="histFrom" type="date" />
+              <label style="margin:0">Sampai</label><input id="histTo" type="date" />
+              <select id="histType"><option value="all">Semua</option><option>Masuk</option><option>Keluar</option></select>
+              <input id="histSearch" placeholder="Cari..." />
+            </div>
+            <div style="max-height:300px;overflow:auto">
+              <table>
+                <thead><tr><th>Waktu</th><th>Tipe</th><th>Nama</th><th class="center">Jumlah</th><th>Aksi</th></tr></thead>
+                <tbody id="histTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <aside style="width:360px">
+          <h2>Stok Saat Ini</h2>
+          <div style="max-height:520px;overflow:auto;margin-top:8px">
+            <table>
+              <thead><tr><th>Nama</th><th class="center">Stok</th><th>Status</th></tr></thead>
+              <tbody id="stokTable"></tbody>
+            </table>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- TAB: PENGGUNA (opsional) -->
+    <section class="panel" id="tab-pengguna" style="display:none">
+      <h2>Kelola Pengguna (mock, hardcoded)</h2>
+      <div class="muted">Akun disimpan di kode (demo). Admin penuh; Viewer hanya lihat.</div>
+      <table style="margin-top:12px">
+        <thead><tr><th>Username</th><th>Nama</th><th>Role</th></tr></thead>
+        <tbody id="usersFull"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.6);align-items:center;justify-content:center;">
+  <div style="width:360px;background:#071022;padding:18px;border-radius:12px;box-shadow:0 6px 30px rgba(2,6,23,0.6);">
+    <h3 style="margin:0 0 8px">Login</h3>
+    <label>Username</label>
+    <input id="loginUser" />
+    <label>Password</label>
+    <input id="loginPass" type="password" />
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button id="loginSubmit" class="btn">Masuk</button>
+      <button id="loginCancel" class="ghost">Batal</button>
+    </div>
+    <div class="muted" style="margin-top:8px;font-size:13px">Gunakan admin/admin123 atau viewer/view123</div>
+  </div>
+</div>
+
+<script>
+/* =========================
+   Data & Storage keys
+   ========================= */
+const KEY_STOK = 'ms_stok_v2';
+const KEY_LOG = 'ms_log_v2';
+const KEY_USER = 'ms_user_v2';
+const KEY_LAST = 'ms_last_v2';
+const KEY_BATAS = 'ms_batas_v2';
+
+/* Hardcoded demo users */
+const USERS = {
+  admin: { name:'Administrator', password:'admin123', role:'admin' },
+  viewer: { name:'Viewer', password:'view123', role:'viewer' }
+};
+
+/* Load from storage or init */
+let stok = JSON.parse(localStorage.getItem(KEY_STOK) || '{}');
+let log = JSON.parse(localStorage.getItem(KEY_LOG) || '[]');
+let currentUser = JSON.parse(localStorage.getItem(KEY_USER) || 'null');
+let lastAction = JSON.parse(localStorage.getItem(KEY_LAST) || 'null');
+let batasNotifikasi = Number(localStorage.getItem(KEY_BATAS) || 5);
+
+/* Helpers */
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function saveAll(){
+  localStorage.setItem(KEY_STOK, JSON.stringify(stok));
+  localStorage.setItem(KEY_LOG, JSON.stringify(log));
+  localStorage.setItem(KEY_USER, JSON.stringify(currentUser));
+  localStorage.setItem(KEY_LAST, JSON.stringify(lastAction));
+  localStorage.setItem(KEY_BATAS, String(batasNotifikasi));
+}
+
+/* Default sample if empty */
+if(Object.keys(stok).length === 0 && log.length === 0){
+  stok = { 'Kabel USB': 20, 'Baterai AA': 8, 'Adaptor Charger': 3, 'Kabel HDMI': 0, 'Mouse': 12, 'Keyboard': 4 };
+  const now = new Date();
+  log = [
+    { id:uid(), waktu: new Date(now.getTime()-86400*1000*5).toLocaleString(), jenis:'Masuk', nama:'Kabel USB', jumlah:20, tanggal: new Date(now.getTime()-86400*1000*5).toISOString().slice(0,10) },
+    { id:uid(), waktu: new Date(now.getTime()-86400*1000*4).toLocaleString(), jenis:'Masuk', nama:'Baterai AA', jumlah:8, tanggal: new Date(now.getTime()-86400*1000*4).toISOString().slice(0,10) },
+    { id:uid(), waktu: new Date(now.getTime()-86400*1000*3).toLocaleString(), jenis:'Keluar', nama:'Adaptor Charger', jumlah:7, tanggal: new Date(now.getTime()-86400*1000*3).toISOString().slice(0,10) }
+  ];
+  saveAll();
+}
+
+/* ========== UI helpers ========== */
+function el(id){ return document.getElementById(id); }
+function q(sel){ return document.querySelector(sel); }
+
+/* Tab navigation */
+document.querySelectorAll('.nav button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('main section.panel').forEach(s=>s.style.display='none');
+    document.getElementById('tab-'+tab).style.display='block';
+    // update charts when switching
+    refreshCharts();
+  });
+});
+
+/* Render Users list (static) */
+function renderUsers(){
+  const rows = Object.keys(USERS).map(u => `<tr><td>${u}</td><td>${USERS[u].name}</td><td>${USERS[u].role}</td></tr>`).join('');
+  el('usersFull').innerHTML = rows;
+  const side = Object.keys(USERS).map(u => `<tr><td>${u}</td><td>${USERS[u].role}</td></tr>`).join('');
+  el('usersTable').innerHTML = side;
+}
+
+/* Auth UI */
+function renderAuth(){
+  if(currentUser){
+    el('userBadge').textContent = currentUser.name;
+    el('userRole').textContent = currentUser.role.toUpperCase();
+    el('btn-open-login').style.display='none';
+    el('btn-logout').style.display='inline-block';
+  } else {
+    el('userBadge').textContent = 'Guest';
+    el('userRole').textContent = 'Belum login';
+    el('btn-open-login').style.display='inline-block';
+    el('btn-logout').style.display='none';
+  }
+  // role-based enable/disable
+  const adminOnly = ['btn-add-in','btn-add-out','btn-export-csv','btn-export-xls','btn-undo','btn-undo-local','btn-reset','btn-set-batas','btn-sample'];
+  adminOnly.forEach(id=>{
+    const node = el(id);
+    if(!node) return;
+    if(currentUser && currentUser.role==='admin'){ node.removeAttribute('disabled'); node.classList.remove('disabled'); }
+    else { node.setAttribute('disabled','disabled'); node.classList.add('disabled'); }
+  });
+}
+
+/* Notifications area (Home) */
+function renderAlerts(){
+  const area = el('alertsArea'); area.innerHTML='';
+  const low = Object.entries(stok).filter(([k,v])=> v > 0 && v < batasNotifikasi);
+  const empty = Object.entries(stok).filter(([k,v])=> v <= 0);
+  if(low.length===0 && empty.length===0){
+    area.innerHTML = '<div class="muted">Tidak ada peringatan.</div>';
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  low.forEach(([name,qty])=>{
+    const div = document.createElement('div');
+    div.innerHTML = `<div class="blink">⚠️ Stok Rendah: ${name} (${qty})</div>`;
+    frag.appendChild(div);
+  });
+  empty.forEach(([name])=>{
+    const div = document.createElement('div');
+    div.innerHTML = `<div class="blink">❗ Stok Habis: ${name}</div>`;
+    frag.appendChild(div);
+  });
+  area.appendChild(frag);
+}
+
+/* Summary stats */
+function renderStats(){
+  el('stat-items').textContent = Object.keys(stok).length;
+  el('stat-units').textContent = Object.values(stok).reduce((s,v)=>s+Number(v||0),0);
+  el('stat-trans').textContent = log.length;
+}
+
+/* Stok sidebar table */
+function renderStokSidebar(){
+  const rows = Object.entries(stok).sort((a,b)=> b[1]-a[1]).slice(0,20).map(([k,v])=>`<tr><td>${k}</td><td class="center">${v}</td></tr>`).join('');
+  el('stokSidebar').innerHTML = rows || '<tr><td colspan="2">Kosong</td></tr>';
+}
+
+/* Stok table (Keluar tab) */
+function renderStokTable(){
+  const rows = Object.entries(stok).sort().map(([k,v])=>{
+    const status = v <= 0 ? '<span class="blink">Habis</span>' : (v < batasNotifikasi ? '<span class="blink">Rendah</span>' : 'Cukup');
+    return `<tr><td>${k}</td><td class="center">${v}</td><td>${status}</td></tr>`;
+  }).join('');
+  el('stokTable').innerHTML = rows || '<tr><td colspan="3">Tidak ada barang</td></tr>';
+}
+
+/* Stok table (sidebar in Home smaller) -- reuse stokSidebar */
+
+/* Histori table rendering with filters */
+function renderHistori(){
+  const from = el('histFrom').value;
+  const to = el('histTo').value;
+  const type = el('histType').value;
+  const q = (el('histSearch').value || '').toLowerCase();
+  const filtered = log.filter(item=>{
+    if(from && item.tanggal < from) return false;
+    if(to && item.tanggal > to) return false;
+    if(type && type!=='all' && item.jenis !== type) return false;
+    if(q){
+      const hay = (item.nama + ' ' + item.jenis + ' ' + item.waktu).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if(filtered.length===0){
+    el('histTable').innerHTML = '<tr><td colspan="5">Belum ada transaksi sesuai filter.</td></tr>';
+    return;
+  }
+
+  el('histTable').innerHTML = filtered.map(item=>{
+    const ico = item.jenis==='Masuk' ? '🟢' : '🔴';
+    const canDelete = currentUser && currentUser.role==='admin';
+    return `<tr>
+      <td>${item.waktu}</td>
+      <td>${ico} ${item.jenis}</td>
+      <td>${item.nama}</td>
+      <td class="center">${item.jumlah}</td>
+      <td>${ canDelete ? `<button class="ghost small" onclick="hapusLog('${item.id}')">Hapus</button>` : '-' }</td>
+    </tr>`;
+  }).join('');
+}
+
+/* Global search affects some lists */
+el('globalSearch').addEventListener('input', ()=> {
+  const qv = el('globalSearch').value.trim().toLowerCase();
+  // filter stok sidebar and hist table
+  if(qv==='') { renderStokSidebar(); renderHistori(); return; }
+  el('stokSidebar').innerHTML = Object.entries(stok).filter(([k])=>k.toLowerCase().includes(qv)).map(([k,v])=>`<tr><td>${k}</td><td class="center">${v}</td></tr>`).join('') || '<tr><td colspan="2">Tidak ada</td></tr>';
+  el('histTable').innerHTML = log.filter(it=>(it.nama+it.jenis+it.waktu).toLowerCase().includes(qv)).map(it=>`<tr><td>${it.waktu}</td><td>${it.jenis}</td><td>${it.nama}</td><td class="center">${it.jumlah}</td><td>-</td></tr>`).join('') || '<tr><td colspan="5">Tidak ada</td></tr>';
+});
+
+/* ========== Transaction functions ========== */
+function addTransaction(isIn){
+  if(!currentUser || currentUser.role !== 'admin'){ alert('Akses: hanya Admin'); return; }
+  const name = (isIn ? el('inName') : el('outName')).value.trim();
+  const qty = Number((isIn ? el('inQty') : el('outQty')).value || 0);
+  const tanggal = (isIn ? el('inDate') : el('outDate')).value || new Date().toISOString().slice(0,10);
+  if(!name || qty <= 0) { alert('Isi nama & jumlah valid'); return; }
+  if(!stok[name]) stok[name] = 0;
+  if(!isIn && stok[name] < qty){ alert('Stok tidak mencukupi (saat ini: '+stok[name]+')'); return; }
+  // apply
+  stok[name] += isIn ? qty : -qty;
+  // push log (newest first)
+  const rec = { id: uid(), waktu: new Date().toLocaleString(), jenis: isIn ? 'Masuk' : 'Keluar', nama: name, jumlah: qty, tanggal };
+  log.unshift(rec);
+  // last action for undo: store what to revert
+  lastAction = { type: 'add', rec: rec };
+  saveAll();
+  // reset fields
+  if(isIn){ el('inName').value=''; el('inQty').value=''; el('inDate').value=''; } else { el('outName').value=''; el('outQty').value=''; el('outDate').value=''; }
+  refreshAll();
+  // alert
+  if(stok[name] <= 0) createToast('Stok habis: '+name, 'danger');
+  else if(stok[name] < batasNotifikasi) createToast('Stok rendah: '+name+' ('+stok[name]+')', 'warn');
+}
+
+function hapusLog(id){
+  if(!currentUser || currentUser.role !== 'admin'){ alert('Hanya Admin boleh hapus'); return; }
+  const idx = log.findIndex(x=>x.id===id); if(idx===-1) return;
+  if(!confirm('Hapus transaksi?')) return;
+  const removed = log.splice(idx,1)[0];
+  // adjust stok: jika removed Masuk => kurangi; jika Keluar => tambah kembali
+  if(removed.jenis === 'Masuk') stok[removed.nama] = Math.max(0, (stok[removed.nama]||0) - removed.jumlah);
+  else stok[removed.nama] = (stok[removed.nama]||0) + removed.jumlah;
+  lastAction = { type: 'delete', rec: removed };
+  saveAll(); refreshAll();
+  createToast('Transaksi dihapus (undo tersedia)', 'info');
+}
+
+/* Undo lastAction */
+function undo(){
+  if(!currentUser || currentUser.role !== 'admin'){ alert('Hanya Admin'); return; }
+  if(!lastAction){ alert('Tidak ada aksi untuk di-undo'); return; }
+  const payload = lastAction;
+  if(payload.type === 'add'){
+    // hapus rekaman yang dibuat
+    const id = payload.rec.id;
+    const idx = log.findIndex(x=>x.id===id);
+    if(idx !== -1){
+      log.splice(idx,1);
+      if(payload.rec.jenis === 'Masuk') stok[payload.rec.nama] = Math.max(0, (stok[payload.rec.nama]||0) - payload.rec.jumlah);
+      else stok[payload.rec.nama] = (stok[payload.rec.nama]||0) + payload.rec.jumlah;
+      lastAction = null; saveAll(); refreshAll(); createToast('Undo: transaksi ditarik kembali', 'info'); return;
+    }
+  } else if(payload.type === 'delete'){
+    // restore deleted record
+    log.unshift(payload.rec);
+    if(payload.rec.jenis === 'Masuk') stok[payload.rec.nama] = (stok[payload.rec.nama]||0) + payload.rec.jumlah;
+    else stok[payload.rec.nama] = Math.max(0, (stok[payload.rec.nama]||0) - payload.rec.jumlah);
+    lastAction = null; saveAll(); refreshAll(); createToast('Undo: transaksi dipulihkan', 'info'); return;
+  }
+  lastAction = null; saveAll(); refreshAll(); alert('Undo selesai');
+}
+
+/* Export functions */
+function exportCSV(){
+  if(!currentUser || currentUser.role !== 'admin'){ alert('Hanya Admin'); return; }
+  // apply same filter as Histori view
+  const from = el('histFrom').value; const to = el('histTo').value; const type = el('histType').value; const q = (el('histSearch').value||'').toLowerCase();
+  const filtered = log.filter(item=>{
+    if(from && item.tanggal < from) return false;
+    if(to && item.tanggal > to) return false;
+    if(type && type!=='all' && item.jenis !== type) return false;
+    if(q && !(item.nama+item.jenis+item.waktu).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if(filtered.length===0) return alert('Tidak ada data untuk diekspor');
+  const header = ['Waktu','Tipe','Nama','Jumlah','Tanggal'];
+  const rows = filtered.map(r => [r.waktu, r.jenis, r.nama, r.jumlah, r.tanggal].map(csvEscape).join(','));
+  const csv = [header.join(',')].concat(rows).join('\n');
+  downloadBlob(csv, 'histori_transaksi.csv', 'text/csv;charset=utf-8;');
+}
+
+function exportXLS(){
+  if(!currentUser || currentUser.role !== 'admin'){ alert('Hanya Admin'); return; }
+  const from = el('histFrom').value; const to = el('histTo').value; const type = el('histType').value; const q = (el('histSearch').value||'').toLowerCase();
+  const filtered = log.filter(item=>{
+    if(from && item.tanggal < from) return false;
+    if(to && item.tanggal > to) return false;
+    if(type && type!=='all' && item.jenis !== type) return false;
+    if(q && !(item.nama+item.jenis+item.waktu).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if(filtered.length===0) return alert('Tidak ada data untuk diekspor');
+  let html = '<table><tr><th>Waktu</th><th>Tipe</th><th>Nama</th><th>Jumlah</th><th>Tanggal</th></tr>';
+  filtered.forEach(r => { html += `<tr><td>${r.waktu}</td><td>${r.jenis}</td><td>${r.nama}</td><td>${r.jumlah}</td><td>${r.tanggal}</td></tr>`; });
+  html += '</table>';
+  downloadBlob(html, 'histori_transaksi.xls', 'application/vnd.ms-excel');
+}
+
+function csvEscape(v){ if(v==null) return ''; v = String(v); if(v.includes(',')||v.includes('"')||v.includes('\n')) return '"'+v.replace(/"/g,'""')+'"'; return v; }
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+/* Toast creation */
+function createToast(msg, type='info'){
+  const d = document.createElement('div');
+  d.textContent = msg;
+  d.style.position = 'fixed';
+  d.style.right = '18px';
+  d.style.bottom = '18px';
+  d.style.padding = '10px 14px';
+  d.style.borderRadius = '8px';
+  d.style.color = '#fff';
+  d.style.zIndex = 9999;
+  d.style.boxShadow = '0 8px 28px rgba(2,6,23,0.5)';
+  if(type==='danger') d.style.background = '#dc2626';
+  else if(type==='warn') d.style.background = '#f97316';
+  else d.style.background = '#111827';
+  document.body.appendChild(d);
+  setTimeout(()=>{ d.style.transition='opacity 0.4s'; d.style.opacity = 0; setTimeout(()=>d.remove(),400); },3500);
+}
+
+/* Delete all storage */
+el('btn-reset').addEventListener('click', ()=>{
+  if(!confirm('Reset semua data aplikasi (localStorage)?')) return;
+  localStorage.removeItem(KEY_STOK); localStorage.removeItem(KEY_LOG); localStorage.removeItem(KEY_USER); localStorage.removeItem(KEY_LAST); localStorage.removeItem(KEY_BATAS);
+  stok = {}; log = []; currentUser = null; lastAction = null; batasNotifikasi = 5;
+  saveAll(); refreshAll(); alert('Storage direset');
+});
+
+/* Download current HTML */
+el('btn-download-html').addEventListener('click', ()=>{
+  const html = '<!doctype html>\\n' + document.documentElement.outerHTML;
+  downloadBlob(html, 'manajemen_stok.html', 'text/html');
+});
+
+/* Sample data fill (button) */
+el('btn-sample').addEventListener('click', ()=>{
+  if(!confirm('Isi sample data stok & histori?')) return;
+  stok = { 'Kabel USB': 20, 'Baterai AA': 8, 'Adaptor Charger': 3, 'Kabel HDMI': 0, 'Mouse': 12, 'Keyboard':4, 'Speaker':6 };
+  const now = new Date();
+  log = [
+    { id:uid(), waktu:new Date(now.getTime()-86400*1000*6).toLocaleString(), jenis:'Masuk', nama:'Kabel USB', jumlah:20, tanggal:new Date(now.getTime()-86400*1000*6).toISOString().slice(0,10) },
+    { id:uid(), waktu:new Date(now.getTime()-86400*1000*4).toLocaleString(), jenis:'Masuk', nama:'Baterai AA', jumlah:8, tanggal:new Date(now.getTime()-86400*1000*4).toISOString().slice(0,10) },
+    { id:uid(), waktu:new Date(now.getTime()-86400*1000*2).toLocaleString(), jenis:'Keluar', nama:'Adaptor Charger', jumlah:7, tanggal:new Date(now.getTime()-86400*1000*2).toISOString().slice(0,10) }
+  ];
+  lastAction = null; saveAll(); refreshAll(); alert('Sample telah ditambahkan');
+});
+
+/* Login modal handlers */
+el('btn-open-login').addEventListener('click', ()=> el('loginModal').style.display='flex');
+el('loginCancel').addEventListener('click', ()=> el('loginModal').style.display='none');
+el('loginSubmit').addEventListener('click', ()=> {
+  const u = (el('loginUser').value || '').trim();
+  const p = el('loginPass').value || '';
+  if(!u) return alert('Isi username');
+  if(!USERS[u] || USERS[u].password !== p) return alert('Username/password salah (admin/admin123 atau viewer/view123)');
+  currentUser = { username: u, name: USERS[u].name, role: USERS[u].role };
+  saveAll(); el('loginModal').style.display='none'; renderAuth(); refreshAll(); alert('Berhasil login sebagai '+currentUser.name+' ('+currentUser.role+')');
+});
+el('btn-logout').addEventListener('click', ()=>{ if(confirm('Logout?')){ currentUser = null; saveAll(); renderAuth(); refreshAll(); } });
+
+/* Buttons: add in/out */
+el('btn-add-in').addEventListener('click', ()=> addTransaction(true));
+el('btn-add-out').addEventListener('click', ()=> addTransaction(false));
+el('btn-undo').addEventListener('click', ()=> { if(confirm('Undo aksi terakhir?')) undo(); });
+el('btn-undo-local').addEventListener('click', ()=> { if(confirm('Undo aksi terakhir?')) undo(); });
+
+/* Export */
+el('btn-export-csv').addEventListener('click', exportCSV);
+el('btn-export-xls').addEventListener('click', exportXLS);
+
+/* Set batas stok */
+el('btn-set-batas').addEventListener('click', ()=>{
+  const v = Number(el('batasInput').value || 0);
+  if(isNaN(v) || v < 0) return alert('Masukkan angka valid');
+  batasNotifikasi = v; saveAll(); refreshAll(); alert('Batas stok rendah diset ke '+batasNotifikasi);
+});
+
+/* Filters for histori */
+['histFrom','histTo','histType','histSearch'].forEach(id => el(id).addEventListener('input', renderHistori));
+
+/* Deleting log made global earlier via hapusLog */
+
+/* ========== Charts ========== */
+let homeChart = null, masukChart = null;
+
+function renderHomeChart(){
+  const ctx = el('homeChart').getContext('2d');
+  const items = Object.entries(stok).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const labels = items.map(i=>i[0]);
+  const data = items.map(i=>i[1]);
+  if(homeChart) homeChart.destroy();
+  homeChart = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ label:'Stok', data, backgroundColor: 'rgba(96,165,250,0.85)'}] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+  });
+}
+
+function renderMasukChart(){
+  const ctx = el('masukChart').getContext('2d');
+  // group jumlah masuk per tanggal (last 7 days)
+  const today = new Date(); const last7 = [];
+  for(let i=6;i>=0;i--){ const d = new Date(today.getTime() - i*86400000); last7.push(d.toISOString().slice(0,10)); }
+  const sums = last7.map(d => log.filter(x=>x.tanggal===d && x.jenis==='Masuk').reduce((s,x)=>s+x.jumlah,0));
+  if(masukChart) masukChart.destroy();
+  masukChart = new Chart(ctx, {
+    type:'line',
+    data:{ labels: last7, datasets:[{label:'Masuk (unit)', data:sums, fill:true, backgroundColor:'rgba(124,58,237,0.12)', borderColor:'rgba(124,58,237,0.9)'}] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+  });
+}
+
+function refreshCharts(){ renderHomeChart(); renderMasukChart(); }
+
+/* Refresh UI */
+function refreshAll(){
+  renderAuth(); renderUsers(); renderAlerts(); renderStats(); renderStokSidebar(); renderStokTable(); renderHistori(); refreshCharts();
+}
+
+/* Utility: create toast on actions */
+function createToastImmediate(m,t){ createToast(m,t); }
+
+/* initial render */
+el('batasInput').value = batasNotifikasi;
+refreshAll();
+
+/* Download / helper functions available from console if needed */
+window.hapusLog = hapusLog;
+window.addTransaction = addTransaction;
+window.undo = undo;
+
+/* expose export functions to global buttons already bound */
+
+/* Save all on unload */
+window.addEventListener('beforeunload', ()=> saveAll());
+
+/* Extra: disable admin-only UI when not admin already handled in renderAuth */
+
+/* End script */
+</script>
+
+</body>
+</html>
+  
