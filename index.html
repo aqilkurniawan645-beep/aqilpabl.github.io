@@ -55,9 +55,9 @@
   <header>
     <div class="container" style="display:flex;align-items:center;position:relative;justify-content:center;gap:10px">
       <div class="menu-toggle" onclick="toggleMenu()">☰</div>
-      <img src="logo-kiri.png" alt="Logo JBI" style="height:50px">
+      <img src="images/logo-kiri.jpg" alt="Logo JBI" style="height:50px">
       <h1>JBI Naga Bonar Medan</h1>
-      <img src="logo-kanan.png" alt="Logo Partner" style="height:50px">
+      <img src="images/logo-kanan.jpg" alt="Logo Partner" style="height:50px">
     </div>
     <nav class="container" id="navbar">
       <ul>
@@ -108,10 +108,10 @@
     <section id="gallery">
       <h2>Galeri</h2>
       <div class="gallery">
-        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&q=60" onclick="openLightbox(this)">
-        <img src="https://images.unsplash.com/photo-1507608869272-5f2a3d5d6f56?w=1200&q=60" onclick="openLightbox(this)">
-        <img src="https://images.unsplash.com/photo-1519397157602-3e2f8f6f7b8a?w=1200&q=60" onclick="openLightbox(this)">
-        <img src="https://images.unsplash.com/photo-1508610048659-a06b669e7a5c?w=1200&q=60" onclick="openLightbox(this)">
+        <img src="images/ride1.jpg" onclick="openLightbox(this)">
+        <img src="images/ride2.jpg" onclick="openLightbox(this)">
+        <img src="images/ride3.jpg" onclick="openLightbox(this)">
+        <img src="images/ride4.jpg" onclick="openLightbox(this)">
       </div>
     </section>
 
@@ -119,10 +119,10 @@
     <section id="members">
       <h2>Anggota Terpilih</h2>
       <div class="members">
-        <div class="member"><img src="logo.jpg" style="width:100%;border-radius:8px"><b>Budi</b><br><small>Ketua</small></div>
-        <div class="member"><img src="anggota2.jpg" style="width:100%;border-radius:8px"><b>Ani</b><br><small>Wakil</small></div>
-        <div class="member"><img src="anggota3.jpg" style="width:100%;border-radius:8px"><b>Rudi</b><br><small>Koordinator Touring</small></div>
-        <div class="member"><img src="anggota4.jpg" style="width:100%;border-radius:8px"><b>Sari</b><br><small>PIC Media</small></div>
+        <div class="member"><img src="images/anggota1.jpg" style="width:100%;border-radius:8px"><b>ALM,Yudi Suroso</b><br><small>FOUNDER</small></div>
+        <div class="member"><img src="images/anggota2.jpg" style="width:100%;border-radius:8px"><b>Ronal Simalango</b><br><small>KETUA</small></div>
+        <div class="member"><img src="images/anggota3.jpg" style="width:100%;border-radius:8px"><b>Sudung Sinaga</b><br><small>SEKRETARIS JENDRAL</small></div>
+        <div class="member"><img src="images/anggota4.jpg" style="width:100%;border-radius:8px"><b>Aqil Kurniawan</b><br><small>BENDAHARA</small></div>
       </div>
     </section>
 
@@ -158,41 +158,20 @@
   <a href="https://wa.me/6281234567890" target="_blank" class="wa-float">💬</a>
 
   <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    function submitForm(e){
-      e.preventDefault();
+    document.getElementById('year').textContent=new Date().getFullYear();
+    function submitForm(e){e.preventDefault();
       const n=document.getElementById('name').value;
       const c=document.getElementById('contactinfo').value;
       const m=document.getElementById('message').value;
       const admin="6281234567890";
       const text=`Halo Admin JBI Naga Bonar Medan,%0ASaya ${n}.%0AKontak: ${c}%0APesan: ${m}`;
       const url=`https://wa.me/${admin}?text=${text}`;
-      window.open(url,'_blank');
-      e.target.reset();
+      window.open(url,'_blank');e.target.reset();
     }
-
-    function openLightbox(img){
-      const lb=document.getElementById('lightbox');
-      document.getElementById('lightbox-img').src=img.src;
-      lb.style.display='flex';
-    }
-    function closeLightbox(e){
-      if(e.target.id==='lightbox'||e.target.id==='lightbox-img'){
-        document.getElementById('lightbox').style.display='none';
-      }
-    }
-
-    function toggleMenu(){
-      document.querySelector('#navbar ul').classList.toggle('active');
-    }
-
-    // Scroll reveal
-    const obs=new IntersectionObserver(entries=>{
-      entries.forEach(en=>{
-        if(en.isIntersecting){en.target.classList.add('visible')}
-      })
-    },{threshold:0.2});
+    function openLightbox(img){document.getElementById('lightbox-img').src=img.src;document.getElementById('lightbox').style.display='flex'}
+    function closeLightbox(e){if(e.target.id==='lightbox'||e.target.id==='lightbox-img'){document.getElementById('lightbox').style.display='none'}}
+    function toggleMenu(){document.querySelector('#navbar ul').classList.toggle('active')}
+    const obs=new IntersectionObserver(entries=>{entries.forEach(en=>{if(en.isIntersecting){en.target.classList.add('visible')}})},{threshold:0.2});
     document.querySelectorAll('section, footer').forEach(el=>obs.observe(el));
   </script>
 </body>
